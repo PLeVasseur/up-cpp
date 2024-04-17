@@ -23,3 +23,6 @@ cmake_install.cmake
 .vscode
 up-core-api/
 /include/uprotocol-cpp/uri/datamodel/
+
+# generated as a part of conan install
+CMakeUserPresets.json

@@ -30,7 +30,6 @@ CMakeToolchain
 
 [layout]
 cmake_layout
-
 ```
 **NOTE:** If using conan version 1.59 Ensure that the conan profile is configured to use ABI 11 (libstdc++11: New ABI.) standards according to https://docs.conan.io/en/1.60/howtos/manage_gcc_abi.html
 
@@ -43,23 +42,38 @@ $ git submodule update --init --recursive
 ```
 
 ### Building locally 
+
+#### Using Conan for build
+
+Most will probably be fine building using Conan as follows:
 ```
 $ cd up-cpp
-$ mkdir build
-$ cd build
+$ conan build . --build=missing -o build_testing=True
+```
+Places the build artifacts in `up-cpp/build/Release`.
 
-$ conan install .. -o build_testing=True
-$ cmake -S .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON  -DCMAKE_INSTALL_PREFIX=install
-$ cmake --build . --target install -- -j 
+#### Using Conan for dependencies only
+
+If you need to, you can use Conan to only install dependencies
+and scaffold out for building using CMake.
+```
+$ cd up-cpp
+$ conan install . --build=missing -o build_testing=True
+$ cmake --preset conan-release
+$ cd build
+$ cmake --build Release --target install -- -j
 ```
 
 ### Creating conan package locally 
-If you need to create a release package for conan, please follow the steps below.
 
+If you need to create a release package for conan, please follow the steps below.
 ```
-$ cd up-cpp
-$ conan create . --build=missing
+$ cd up-cpp/conan-recipes
+$ conan create .. --build=missing
 ```
+Installs the `up-cpp` package in your local conan cache.
+* `~/.conan` if using Conan 1.59
+* `~/.conan2` if using Conan 2.X
 
 ## Show your support
 
