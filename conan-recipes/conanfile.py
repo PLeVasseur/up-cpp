@@ -1,6 +1,5 @@
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
-import os
 
 class UpCpp(ConanFile):
     name = "up-cpp"
@@ -30,11 +29,12 @@ class UpCpp(ConanFile):
         "build_unbundled": False,
         "build_cross_compiling": False,
     }
-
-    def layout(self):
-        cmake_layout(self)
-        self.folders.build = os.path.join("build", str(self.settings.build_type))
-        self.folders.install = "install"
+        
+    def requirements(self):
+        self.requires("protobuf/3.21.12" + ("@cross/cross" if self.options.build_cross_compiling else ""))
+        self.requires("spdlog/1.13.0")
+        if self.options.build_testing:
+            self.requires("gtest/1.14.0")
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -44,13 +44,14 @@ class UpCpp(ConanFile):
         tc.variables["CMAKE_INSTALL_PREFIX"] = self.folders.install
         tc.generate()
 
-    def requirements(self):
-        self.requires("protobuf/3.21.12" + ("@cross/cross" if self.options.build_cross_compiling else ""))
-        self.requires("spdlog/1.13.0")
-        if self.options.build_testing:
-            self.requires("gtest/1.14.0")
-
     def build(self):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+
+    def package(self):
+        cmake = CMake(self)
+        cmake.install()
+
+    def package_info(self):
+        self.cpp_info.libs = ["up-cpp"]

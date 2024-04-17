@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
   
 jobs:
-  build:
-    name: Build
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -23,10 +23,8 @@ jobs:
       - name: Conan version
         run: echo "${{ steps.conan.outputs.version }}"
 
-
       - name: Create default Conan profile
         run: conan profile detect
-
 
       - name: Fetch and link up-core-api
         shell: bash
@@ -37,21 +35,48 @@ jobs:
       - name: Build && install up-cpp
         shell: bash
         run: |
-          mkdir -p build && cd build
-          conan install .. -o build_testing=True
-          cmake -S .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=~/local
-          cmake --build . --target install -- -j
+          conan install . --build=missing -o build_testing=True
 
       - name: Run the test
         shell: bash
         run: |
-          cd build
+          cd build/Release
           ctest
 
       - name: Create up-cpp Conan package
         shell: bash
         run: |
-          conan create . --build=missing
+          cd conan-recipes
+          conan create .. --build=missing
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Conan
+        id: conan
+        uses: turtlebrowser/get-conan@main
+
+      - name: Conan version
+        run: echo "${{ steps.conan.outputs.version }}"
+
+      - name: Create default Conan profile
+        run: conan profile detect
+
+      - name: Fetch and link up-core-api
+        shell: bash
+        run: |
+          git clone -b uprotocol-core-api-1.5.6 https://github.com/eclipse-uprotocol/up-core-api.git
+          git submodule update --init --recursive
+
+      - name: Create up-cpp Conan package
+        shell: bash
+        run: |
+          cd conan-recipes
+          conan create .. --build=missing          
   
   
   # NOTE: In GitHub repository settings, the "Require status checks to pass
